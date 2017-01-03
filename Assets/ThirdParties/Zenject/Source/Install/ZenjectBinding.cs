@@ -61,6 +61,11 @@ namespace Zenject
             // Define this method so we expose the enabled check box
         }
 
+        public void SetContext(Context context)
+        {
+            _context = context;
+        }
+
         public enum BindTypes
         {
             Self,

@@ -7,7 +7,7 @@ namespace Extension
     {
         public static bool IsNull<T>(this T root) where T : class
         {
-            return root == null;
+            return ReferenceEquals(root, null);
         }
 
         public static bool IsNull<T>(this T? obj) where T : struct
@@ -17,7 +17,7 @@ namespace Extension
 
         public static bool IsValid<T>(this T root) where T : class
         {
-            return root != null;
+            return IsNull(root).IsFalse();
         }
     }
 
