@@ -8,6 +8,7 @@ namespace Lonely
 {
     public interface IFSM : IInitializable, ITickable, IFixedTickable, ILateTickable, IDisposable
     {
+        IState curState { get; }
         float stateTime { get; }
 
         bool IsPrevState<TState>() where TState : class, IState;
@@ -20,6 +21,8 @@ namespace Lonely
     public class FSM : IFSM
     {
         #region Explicit Interface
+
+        IState IFSM.curState { get { return _curState; } }
 
         float IFSM.stateTime { get { return _stateTime; } }
 
@@ -120,6 +123,7 @@ namespace Lonely
         #endregion IDisposable Support
 
         private readonly List<IState> _states = new List<IState>();
+
         private IState _prevState = State.Null;
         protected IState _curState = State.Null;
         private float _stateTime;
@@ -131,23 +135,26 @@ namespace Lonely
 
         private void ChangeState<TState>() where TState : class, IState
         {
+            TState state = null;
             foreach (var stateIter in _states)
             {
-                var state = (stateIter as TState);
+                state = (stateIter as TState);
                 if (state.IsValid())
                 {
-                    _curState.Exit();
-                    _prevState = _curState;
-
-                    state.Enter();
-                    _curState = state;
-
                     _stateTime = 0;
-                    return;
+                    _curState.Exit();
+
+                    _prevState = _curState;
+                    _curState = state;
+                    // 다음 프레임에서 Enter를 호출
+                    //yield return null;
+                    _curState.Enter();
+                    break;
                 }
             }
 
-            Debug.Log("Not Find " + typeof(TState).Name + " State.");
+            if (state.IsNull())
+                Debug.Log("Not Find " + typeof(TState).Name + " State.");
         }
 
         private void CheckStateType<TState>() where TState : class, IState
@@ -166,6 +173,8 @@ namespace Lonely
 
         private class NullFSM : IFSM
         {
+            IState IFSM.curState { get { return State.Null; } }
+
             float IFSM.stateTime { get { return 0; } }
 
             void IFSM.ChangeState<TState>() { }

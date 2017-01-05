@@ -4,13 +4,13 @@ using Zenject;
 
 namespace Lonely
 {
-    public class PlayerState_Move : IState, ITickable
+    public class PlayerState_Kill : IState, ITickable
     {
         #region Explicit Interface
 
         void IState.Enter()
         {
-            Debug.Log("PlayerState_Move Enter");
+            Debug.Log("PlayerState_Kill Enter");
             _model.position = _model.movePosition;
             _enemyTurnCommand.Execute();
         }
@@ -30,17 +30,16 @@ namespace Lonely
         #endregion Explicit Interface
 
         private readonly PlayerFSM _fsm;
-        private readonly GameCommands.EnemyTurn _enemyTurnCommand;
-        private readonly float _moveTime;
         private readonly PlayerModel _model;
+        private readonly float _moveTime;
+        private readonly GameCommands.EnemyTurn _enemyTurnCommand;
 
-        public PlayerState_Move(PlayerFSM fsm, PlayerModel model, GameCommands.EnemyTurn enemyTurnCommand,
-                                float moveTime)
+        public PlayerState_Kill(PlayerFSM fsm, PlayerModel model, float moveTime, GameCommands.EnemyTurn enemyTurnCommand)
         {
             _fsm = fsm;
             _model = model;
-            _enemyTurnCommand = enemyTurnCommand;
             _moveTime = moveTime;
+            _enemyTurnCommand = enemyTurnCommand;
         }
 
         private bool IsOverMoveTime()
@@ -48,8 +47,7 @@ namespace Lonely
             return _fsm.stateTime.IsGreater(_moveTime);
         }
 
-        public class Factory : Factory<PlayerState_Move>
-        {
-        }
+        public class Factory : Factory<PlayerState_Kill>
+        { }
     }
 }

@@ -4,31 +4,17 @@ using Zenject;
 
 namespace Lonely
 {
-    public class PlayerFSM : IFSM
+    public class PlayerFSM : IInitializable, ITickable, IDisposable
     {
         #region Explicit Interface
 
-        float IFSM.stateTime { get { return _fsm.stateTime; } }
-
-        void IFSM.ChangeState<TState>()
-        {
-            _fsm.ChangeState<TState>();
-        }
-
-        bool IFSM.IsCurState<TState>()
-        {
-            return _fsm.IsCurState<TState>();
-        }
-
-        bool IFSM.IsPrevState<TState>()
-        {
-            return _fsm.IsPrevState<TState>();
-        }
-
         void IInitializable.Initialize()
         {
-            var states = new List<IState>() { _idleStateFactory.Create(),
-                                              _moveStateFactory.Create()  };
+            var states = new List<IState>() { _idleFactory.Create(),
+                                              _moveFactory.Create(),
+                                              _blockFactory.Create(),
+                                              _killFactory.Create(),
+                                              _dieFactory.Create() };
             _fsm = _fsmFactory.Create(states);
 
             _fsm.Initialize();
@@ -37,16 +23,6 @@ namespace Lonely
         void ITickable.Tick()
         {
             _fsm.Tick();
-        }
-
-        void IFixedTickable.FixedTick()
-        {
-            _fsm.FixedTick();
-        }
-
-        void ILateTickable.LateTick()
-        {
-            _fsm.LateTick();
         }
 
         void IDisposable.Dispose()
@@ -58,15 +34,32 @@ namespace Lonely
 
         private IFSM _fsm = FSM.Null;
         private readonly FSM.Factory _fsmFactory;
-        private readonly PlayerState_Idle.Factory _idleStateFactory;
-        private readonly PlayerState_Move.Factory _moveStateFactory;
+        private readonly PlayerState_Idle.Factory _idleFactory;
+        private readonly PlayerState_Move.Factory _moveFactory;
+        private readonly PlayerState_Block.Factory _blockFactory;
+        private readonly PlayerState_Kill.Factory _killFactory;
+        private readonly PlayerState_Die.Factory _dieFactory;
 
-        public PlayerFSM(FSM.Factory fsmFactory, PlayerState_Idle.Factory idleStateFactory,
-                                                 PlayerState_Move.Factory moveStateFactory)
+        public float stateTime { get { return _fsm.stateTime; } }
+
+        public PlayerFSM(FSM.Factory fsmFactory,
+                         PlayerState_Idle.Factory idleFactory,
+                         PlayerState_Move.Factory moveFactory,
+                         PlayerState_Block.Factory blockFactory,
+                         PlayerState_Kill.Factory killFactory,
+                         PlayerState_Die.Factory dieFactory)
         {
             _fsmFactory = fsmFactory;
-            _idleStateFactory = idleStateFactory;
-            _moveStateFactory = moveStateFactory;
+            _idleFactory = idleFactory;
+            _moveFactory = moveFactory;
+            _blockFactory = blockFactory;
+            _killFactory = killFactory;
+            _dieFactory = dieFactory;
+        }
+
+        public void ChangeState<TState>() where TState : class, IState
+        {
+            _fsm.ChangeState<TState>();
         }
     }
 }

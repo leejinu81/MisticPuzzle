@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using Zenject;
 
 namespace Lonely
@@ -17,10 +18,20 @@ namespace Lonely
         #endregion Explicit Interface
 
         private readonly Player _player;
+        private readonly List<Enemy> _enemys;
 
-        public GameManager(Player player)
+        public GameManager(Player player, List<Enemy> enemys)
         {
             _player = player;
+            _enemys = enemys;
         }
-    }
+
+        public void EnemyTurn()
+        {
+            foreach(var e in _enemys)
+            {
+                e.EnemyTurn();
+            }
+        }
+    }    
 }
