@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using DG.Tweening;
+using UnityEngine;
 
 namespace Lonely
 {
@@ -139,6 +140,19 @@ namespace Lonely
         public void ResetDirection()
         {
             SetDirection(_originDir);
+        }
+
+        public void DOMove(Vector3 endValue, float duration, TweenCallback complete = null)
+        {
+            var delta = endValue - _transform.position;
+            SetDirection(delta);
+
+            _transform.DOMove(endValue, duration).SetEase(Ease.OutQuint).OnComplete(complete);
+        }
+
+        public void DOSpriteFade(Color endColor, float duration, TweenCallback complete = null)
+        {
+            _sprite.DOColor(endColor, duration).SetEase(Ease.Linear).OnComplete(complete);
         }
     }
 }

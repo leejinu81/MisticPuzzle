@@ -6,6 +6,8 @@ namespace Lonely
     {
         public class EnemyTurn : Command { }
 
+        public class PlayerTurn : Command { }
+
         public class Escape : Command { }
 
         public class Die : Command { }

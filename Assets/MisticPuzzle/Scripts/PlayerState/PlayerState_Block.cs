@@ -1,4 +1,5 @@
-﻿using Extension;
+﻿using DG.Tweening;
+using Extension;
 using Zenject;
 
 namespace Lonely
@@ -9,6 +10,8 @@ namespace Lonely
 
         void IState.Enter()
         {
+            //_model.DOMove(_model.movePosition, _moveTime);            
+            _model.DOBlock();
         }
 
         void IState.Exit()
@@ -26,11 +29,13 @@ namespace Lonely
         #endregion Explicit Interface
 
         private readonly PlayerFSM _fsm;
+        private readonly PlayerModel _model;
         private readonly float _moveTime;
 
-        public PlayerState_Block(PlayerFSM fsm, float moveTime)
+        public PlayerState_Block(PlayerFSM fsm, PlayerModel model, float moveTime)
         {
             _fsm = fsm;
+            _model = model;
             _moveTime = moveTime;
         }
 

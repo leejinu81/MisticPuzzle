@@ -1,30 +1,18 @@
-﻿using Extension;
-using UnityEngine;
-using Zenject;
+﻿using Zenject;
 
 namespace Lonely
 {
-    public class PlayerState_Move : IState, ITickable
+    public class PlayerState_Move : IState
     {
         #region Explicit Interface
 
         void IState.Enter()
         {
-            Debug.Log("PlayerState_Move Enter");
-            _model.position = _model.movePosition;
-            _enemyTurnCommand.Execute();
+            _model.DOMove(_model.movePosition, _moveTime, OnMoveComplete);
         }
 
         void IState.Exit()
         {
-        }
-
-        void ITickable.Tick()
-        {
-            if (IsOverMoveTime())
-            {
-                _fsm.ChangeState<PlayerState_Idle>();
-            }
         }
 
         #endregion Explicit Interface
@@ -43,9 +31,10 @@ namespace Lonely
             _moveTime = moveTime;
         }
 
-        private bool IsOverMoveTime()
+        private void OnMoveComplete()
         {
-            return _fsm.stateTime.IsGreater(_moveTime);
+            _fsm.ChangeState<PlayerState_Idle>();
+            _enemyTurnCommand.Execute();
         }
 
         public class Factory : Factory<PlayerState_Move>

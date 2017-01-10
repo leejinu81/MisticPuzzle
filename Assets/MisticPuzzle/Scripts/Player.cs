@@ -40,6 +40,11 @@ namespace Lonely
             }
         }
 
+        public void PlayerTurn()
+        {
+            _fsm.PlayerTurn();
+        }
+
         public void Die()
         {
             _fsm.ChangeState<PlayerState_Die>();

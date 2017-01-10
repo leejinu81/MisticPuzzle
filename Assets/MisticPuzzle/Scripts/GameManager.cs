@@ -26,6 +26,11 @@ namespace Lonely
             _enemys = enemys;
         }
 
+        public void PlayerTurn()
+        {
+            _player.PlayerTurn();
+        }
+
         public void EnemyTurn()
         {
             foreach(var e in _enemys)

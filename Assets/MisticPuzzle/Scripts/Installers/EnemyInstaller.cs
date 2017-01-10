@@ -27,6 +27,7 @@ namespace Lonely
             Container.BindInstance(_settings.enemySprite);            
 
             Container.BindInstance(_settings.blockingLayer);
+            Container.BindInstance(_settings.moveTime);            
             Container.BindInstance(_settings.direction);
         }
 
@@ -39,6 +40,7 @@ namespace Lonely
             public SpriteRenderer enemySprite;            
 
             public LayerMask blockingLayer;
+            public float moveTime;
             public eDirection direction;
         }
     }

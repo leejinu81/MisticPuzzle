@@ -21,6 +21,7 @@ namespace Lonely
             Container.BindAllInterfacesAndSelf<UIManager>().To<UIManager>().AsSingle();
 
             Container.BindCommand<GameCommands.EnemyTurn>().To<GameManager>(x => x.EnemyTurn).AsSingle();
+            Container.BindCommand<GameCommands.PlayerTurn>().To<GameManager>(x => x.PlayerTurn).AsSingle();
             Container.BindCommand<GameCommands.Escape>().To<UIManager>(x => x.Escape).AsSingle();
             Container.BindCommand<GameCommands.Die>().To<UIManager>(x => x.Die).AsSingle();
 

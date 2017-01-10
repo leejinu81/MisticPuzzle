@@ -61,5 +61,10 @@ namespace Lonely
         {
             _fsm.ChangeState<TState>();
         }
+
+        public void PlayerTurn()
+        {
+            _fsm.ChangeState<PlayerState_Idle>();
+        }
     }
 }

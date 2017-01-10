@@ -22,12 +22,8 @@ namespace Lonely
         }
 
         void ITurnable.Turn()
-        {
-            Move(_model.dir);
-            if (Equals(_model.position, _model.originPos))
-            {
-                _fsm.ChangeState<EnemyState_Idle>();
-            }
+        {            
+            Move(_model.dir);            
         }
 
         #endregion Explicit Interface
@@ -35,12 +31,16 @@ namespace Lonely
         private readonly EnemyFSM _fsm;
         private readonly EnemyModel _model;
         private readonly LayerMask _blockLayer;
+        private readonly GameCommands.PlayerTurn _playerTurn;
+        private readonly float _moveTime;
 
-        public EnemyState_Return(EnemyFSM fsm, EnemyModel model, LayerMask blockLayer)
+        public EnemyState_Return(EnemyFSM fsm, EnemyModel model, LayerMask blockLayer, GameCommands.PlayerTurn playerTurn, float moveTime)
         {
             _fsm = fsm;
             _model = model;
             _blockLayer = blockLayer;
+            _playerTurn = playerTurn;
+            _moveTime = moveTime;
         }
 
         private void SetReturnDirection()
@@ -57,7 +57,8 @@ namespace Lonely
             var hitInfo = Linecast(startPos, endPos);
             if (hitInfo.transform.IsNull())
             {
-                _model.position = _model.position + dir;
+                //_model.position = _model.position + dir;
+                _model.DOMove(_model.position + dir, _moveTime, OnMoveComplete);
             }
             else if (hitInfo.transform.CompareTag("Player"))
             {
@@ -71,8 +72,8 @@ namespace Lonely
         private void PlayerKill(Player player)
         {
             player.Die();
-
-            _model.position = player.XY();
+            
+            _model.targetPos = player.XY();
             _fsm.ChangeState<EnemyState_Kill>();
         }
 
@@ -83,6 +84,16 @@ namespace Lonely
             _model.enableCollider = true;
 
             return hitInfo;
+        }
+
+        private void OnMoveComplete()
+        {
+            if (Equals(_model.position, _model.originPos))
+            {
+                _fsm.ChangeState<EnemyState_Idle>();
+            }
+
+            _playerTurn.Execute();
         }
 
         public class Factory : Factory<EnemyState_Return>

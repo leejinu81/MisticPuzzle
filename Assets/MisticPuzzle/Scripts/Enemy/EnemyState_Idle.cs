@@ -30,12 +30,14 @@ namespace Lonely
         private readonly EnemyFSM _fsm;
         private readonly EnemyModel _model;
         private readonly EnemyEye _eye;
+        private readonly GameCommands.PlayerTurn _playerTurn;
 
-        public EnemyState_Idle(EnemyFSM fsm, EnemyModel model, EnemyEye eye)
+        public EnemyState_Idle(EnemyFSM fsm, EnemyModel model, EnemyEye eye, GameCommands.PlayerTurn playerTurn)
         {
             _fsm = fsm;
             _model = model;
             _eye = eye;
+            _playerTurn = playerTurn;
         }
 
         private void FindingPlayer()
@@ -44,6 +46,10 @@ namespace Lonely
             if (_eye.Look(out player))
             {
                 MoveToPlayer(player);
+            }
+            else
+            {
+                _playerTurn.Execute();
             }
         }
 

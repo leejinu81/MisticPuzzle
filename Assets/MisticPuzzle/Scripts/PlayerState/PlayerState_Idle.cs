@@ -10,7 +10,6 @@ namespace Lonely
 
         void IState.Enter()
         {
-            Debug.Log("PlayerState_Idle Enter");
         }
 
         void IState.Exit()
@@ -74,6 +73,7 @@ namespace Lonely
         {
             if (enemy.isTitanShield)
             {
+                _model.movePosition = enemy.XY();
                 _fsm.ChangeState<PlayerState_Block>();
             }
             else

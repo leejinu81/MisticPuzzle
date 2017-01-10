@@ -11,7 +11,7 @@ namespace Lonely
         void IState.Enter()
         {
             Debug.Log("EnemyState_MoveToTarget Enter");
-            _model.spriteColor = Color.red;
+            _model.DOSpriteFade(Color.red, _moveTime, () => _playerTurn.Execute());
             _model.enableTarget = true;
         }
 
@@ -29,10 +29,6 @@ namespace Lonely
             }
 
             Move(_model.dir);
-            if (Equals(_model.position, _model.targetPos))
-            {
-                _fsm.ChangeState<EnemyState_Return>();
-            }
         }
 
         #endregion Explicit Interface
@@ -41,13 +37,17 @@ namespace Lonely
         private readonly EnemyModel _model;
         private readonly LayerMask _blockLayer;
         private readonly EnemyEye _eye;
+        private readonly float _moveTime;
+        private readonly GameCommands.PlayerTurn _playerTurn;
 
-        public EnemyState_MoveToTarget(EnemyFSM fsm, EnemyModel model, LayerMask blockLayer, EnemyEye eye)
+        public EnemyState_MoveToTarget(EnemyFSM fsm, EnemyModel model, LayerMask blockLayer, EnemyEye eye, float moveTime, GameCommands.PlayerTurn playerTurn)
         {
             _fsm = fsm;
             _model = model;
             _blockLayer = blockLayer;
             _eye = eye;
+            _moveTime = moveTime;
+            _playerTurn = playerTurn;
         }
 
         private void Move(Vector2 dir)
@@ -58,7 +58,7 @@ namespace Lonely
             var hitInfo = Linecast(startPos, endPos);
             if (hitInfo.transform.IsNull())
             {
-                _model.position = _model.position + dir;
+                _model.DOMove(_model.position + dir, _moveTime, OnMoveComplete);
             }
             else if (hitInfo.transform.CompareTag("Player"))
             {
@@ -73,7 +73,7 @@ namespace Lonely
         {
             player.Die();
 
-            _model.position = player.XY();
+            _model.targetPos = player.XY();
             _fsm.ChangeState<EnemyState_Kill>();
         }
 
@@ -84,6 +84,16 @@ namespace Lonely
             _model.enableCollider = true;
 
             return hitInfo;
+        }
+
+        private void OnMoveComplete()
+        {
+            if (Equals(_model.position, _model.targetPos))
+            {
+                _fsm.ChangeState<EnemyState_Return>();
+            }
+
+            _playerTurn.Execute();
         }
 
         public class Factory : Factory<EnemyState_MoveToTarget>
