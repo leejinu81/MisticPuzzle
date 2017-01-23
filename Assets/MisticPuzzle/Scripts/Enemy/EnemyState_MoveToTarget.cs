@@ -4,22 +4,74 @@ using Zenject;
 
 namespace Lonely
 {
-    public class EnemyState_MoveToTarget : IState, ITurnable, ITitanShield
+    public class EnemyState_MoveToTarget : GuardianState, ITitanShield
     {
-        #region Explicit Interface
+        public EnemyState_MoveToTarget(IStateEnter enter, IStateExit exit, IStateUpdate update, ITurnable turnable)
+            : base(enter, exit, update, turnable)
+        {
+        }
 
-        void IState.Enter()
+        public class CustomFactory : IFactory<GuardianState>
+        {
+            #region interface
+
+            GuardianState IFactory<GuardianState>.Create()
+            {
+                var binder = GuardianStateBinder<EnemyState_MoveToTarget>.For(_container);
+                return binder.Turn<EnemyStateMoveToTarget_Turn>()
+                             .Enter<EnemyStateMoveToTarget_Enter>()
+                             .Exit<EnemyStateMoveToTarget_Exit>().Make();
+            }
+
+            #endregion interface
+
+            private readonly DiContainer _container;
+
+            public CustomFactory(DiContainer container)
+            {
+                _container = container;
+            }
+        }
+    }
+
+    public class EnemyStateMoveToTarget_Enter : IStateEnter
+    {
+        void IStateEnter.Enter()
         {
             Debug.Log("EnemyState_MoveToTarget Enter");
             _model.DOSpriteFade(Color.red, _moveTime, () => _playerTurn.Execute());
             _model.enableTarget = true;
         }
 
-        void IState.Exit()
+        private readonly EnemyModel _model;
+        private readonly float _moveTime;
+        private readonly GameCommands.PlayerTurn _playerTurn;
+
+        public EnemyStateMoveToTarget_Enter(EnemyModel model, float moveTime, GameCommands.PlayerTurn playerTurn)
+        {
+            _model = model;
+            _moveTime = moveTime;
+            _playerTurn = playerTurn;
+        }
+    }
+
+    public class EnemyStateMoveToTarget_Exit : IStateExit
+    {
+        void IStateExit.Exit()
         {
             _model.spriteColor = Color.white;
         }
 
+        private readonly EnemyModel _model;
+
+        public EnemyStateMoveToTarget_Exit(EnemyModel model)
+        {
+            _model = model;
+        }
+    }
+
+    public class EnemyStateMoveToTarget_Turn : ITurnable
+    {
         void ITurnable.Turn()
         {
             Player player;
@@ -31,22 +83,20 @@ namespace Lonely
             Move(_model.dir);
         }
 
-        #endregion Explicit Interface
-
-        private readonly EnemyFSM _fsm;
-        private readonly EnemyModel _model;
-        private readonly LayerMask _blockLayer;
+        private readonly GuardianFSM _fsm;
         private readonly EnemyEye _eye;
+        private readonly EnemyModel _model;
         private readonly float _moveTime;
+        private readonly LayerMask _blockLayer;
         private readonly GameCommands.PlayerTurn _playerTurn;
 
-        public EnemyState_MoveToTarget(EnemyFSM fsm, EnemyModel model, LayerMask blockLayer, EnemyEye eye, float moveTime, GameCommands.PlayerTurn playerTurn)
+        public EnemyStateMoveToTarget_Turn(GuardianFSM fsm, EnemyEye eye, EnemyModel model, float moveTime, LayerMask blockLayer, GameCommands.PlayerTurn playerTurn)
         {
             _fsm = fsm;
-            _model = model;
-            _blockLayer = blockLayer;
             _eye = eye;
+            _model = model;
             _moveTime = moveTime;
+            _blockLayer = blockLayer;
             _playerTurn = playerTurn;
         }
 
@@ -95,9 +145,6 @@ namespace Lonely
 
             _playerTurn.Execute();
         }
-
-        public class Factory : Factory<EnemyState_MoveToTarget>
-        { }
     }
 
     public interface ITitanShield

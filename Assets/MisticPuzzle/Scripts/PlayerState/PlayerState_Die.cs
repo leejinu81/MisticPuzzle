@@ -2,32 +2,49 @@
 
 namespace Lonely
 {
-    public class PlayerState_Die : IState
+    public class PlayerState_Die : State
     {
-        #region Explicit Interface
+        public PlayerState_Die(IStateEnter enter, IStateExit exit, IStateUpdate update)
+            : base(enter, exit, update)
+        {
+        }        
 
-        void IState.Enter()
+        public class CustomFactory : IFactory<State>
+        {
+            #region interface
+
+            State IFactory<State>.Create()
+            {
+                var binder = StateBinder<PlayerState_Die>.For(_container);
+                return binder.Enter<PlayerStateDie_Enter>().Make();
+            }
+
+            #endregion interface
+
+            private readonly DiContainer _container;
+
+            public CustomFactory(DiContainer container)
+            {
+                _container = container;
+            }
+        }
+    }    
+
+    public class PlayerStateDie_Enter : IStateEnter
+    {
+        void IStateEnter.Enter()
         {
             _model.enableGameObject = false;
             _dieCommand.Execute();
         }
 
-        void IState.Exit()
-        {
-        }
-
-        #endregion Explicit Interface
-
         private readonly PlayerModel _model;
         private readonly GameCommands.Die _dieCommand;
 
-        public PlayerState_Die(PlayerModel model, GameCommands.Die dieCommand)
+        public PlayerStateDie_Enter(PlayerModel model, GameCommands.Die dieCommand)
         {
             _model = model;
             _dieCommand = dieCommand;
         }
-
-        public class Factory : Factory<PlayerState_Die>
-        { }
     }
 }

@@ -6,79 +6,33 @@ using Zenject;
 
 namespace Lonely
 {
-    public interface IFSM : IInitializable, ITickable, IFixedTickable, ILateTickable, IDisposable
-    {
-        IState curState { get; }
-        float stateTime { get; }
-
-        bool IsPrevState<TState>() where TState : class, IState;
-
-        bool IsCurState<TState>() where TState : class, IState;
-
-        void ChangeState<TState>() where TState : class, IState;
-    }
-
-    public class FSM : IFSM
+    public abstract class FSM<TState> : IInitializable, ITickable, IDisposable
+        where TState : State
     {
         #region Explicit Interface
 
-        IState IFSM.curState { get { return _curState; } }
-
-        float IFSM.stateTime { get { return _stateTime; } }
-
-        bool IFSM.IsPrevState<TState>()
-        {
-            CheckStateType<TState>();
-
-            return Equals(_prevState.GetType(), typeof(TState));
-        }
-
-        bool IFSM.IsCurState<TState>()
-        {
-            CheckStateType<TState>();
-
-            return Equals(_curState.GetType(), typeof(TState));
-        }
-
-        void IFSM.ChangeState<TState>()
-        {
-            CheckStateType<TState>();
-
-            ChangeState<TState>();
-        }
-
         void IInitializable.Initialize()
         {
-            foreach (var iterState in _states)
+            foreach (var stateFactory in _stateFactoryList)
             {
-                var initializeable = iterState as IInitializable;
-                if (initializeable.IsValid())
-                    initializeable.Initialize();
+                var state = stateFactory.Create() as TState;
+                _stateDic.Add(state.GetType(), state);
             }
         }
 
         void ITickable.Tick()
         {
             _stateTime += Time.deltaTime;
-
-            var tickable = _curState as ITickable;
-            if (tickable.IsValid())
-                tickable.Tick();
+            _curState.Update();
         }
 
-        void IFixedTickable.FixedTick()
-        {
-            var fixedTickable = _curState as IFixedTickable;
-            if (fixedTickable.IsValid())
-                fixedTickable.FixedTick();
-        }
+        //void IFixedTickable.FixedTick()
+        //{
+        //}
 
-        void ILateTickable.LateTick()
-        {
-            var lateTickable = _curState as ILateTickable;
-            if (lateTickable.IsValid())
-                lateTickable.LateTick();
-        }
+        //void ILateTickable.LateTick()
+        //{
+        //}
 
         #endregion Explicit Interface
 
@@ -122,78 +76,53 @@ namespace Lonely
 
         #endregion IDisposable Support
 
-        private readonly List<IState> _states = new List<IState>();
+        // FIXME
+        public State curState { get { return _curState; } }
 
-        private IState _prevState = State.Null;
-        protected IState _curState = State.Null;
+        public float stateTime { get { return _stateTime; } }
+
+        protected readonly List<IFactory<TState>> _stateFactoryList;
+        private readonly Dictionary<Type, TState> _stateDic = new Dictionary<Type, TState>();
+        private TState _prevState;
+        protected TState _curState;
+
         private float _stateTime;
 
-        public FSM(List<IState> states)
+        public FSM(List<IFactory<TState>> stateFactoryList)
         {
-            _states.AddRange(states);
+            _stateFactoryList = stateFactoryList;
         }
 
-        private void ChangeState<TState>() where TState : class, IState
+        public bool IsPrevState<TStateType>()
+            where TStateType : State
+        {
+            return Equals(typeof(TStateType), _prevState.GetType());
+        }
+
+        public bool IsCurrentState<TStateType>()
+            where TStateType : State
+        {
+            return Equals(typeof(TStateType), _curState.GetType());
+        }
+
+        public void ChangeState<TStateType>()
+            where TStateType : State
         {
             TState state = null;
-            foreach (var stateIter in _states)
+            if (_stateDic.TryGetValue(typeof(TStateType), out state))
             {
-                state = (stateIter as TState);
-                if (state.IsValid())
-                {
-                    _stateTime = 0;
+                if (_curState.IsValid())
                     _curState.Exit();
 
-                    _prevState = _curState;
-                    _curState = state;
-                    // 다음 프레임에서 Enter를 호출
-                    //yield return null;
-                    _curState.Enter();
-                    break;
-                }
+                _prevState = _curState;
+                _curState = state;
+                _curState.Enter();
+
+                _stateTime = 0.0f;
             }
 
             if (state.IsNull())
-                Debug.Log("Not Find " + typeof(TState).Name + " State.");
+                Debug.Log("Not Find " + typeof(TStateType) + " State.");
         }
-
-        private void CheckStateType<TState>() where TState : class, IState
-        {
-            if (Equals(typeof(TState), typeof(IState)))
-                throw new ArgumentOutOfRangeException();
-        }
-
-        public class Factory : Factory<List<IState>, FSM>
-        {
-        }
-
-        #region Null Object
-
-        public static readonly IFSM Null = new NullFSM();
-
-        private class NullFSM : IFSM
-        {
-            IState IFSM.curState { get { return State.Null; } }
-
-            float IFSM.stateTime { get { return 0; } }
-
-            void IFSM.ChangeState<TState>() { }
-
-            void IDisposable.Dispose() { }
-
-            void IFixedTickable.FixedTick() { }
-
-            void IInitializable.Initialize() { }
-
-            bool IFSM.IsCurState<TState>() { return false; }
-
-            bool IFSM.IsPrevState<TState>() { return false; }
-
-            void ILateTickable.LateTick() { }
-
-            void ITickable.Tick() { }
-        }
-
-        #endregion Null Object
     }
 }

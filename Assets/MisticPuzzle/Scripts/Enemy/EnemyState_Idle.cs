@@ -4,11 +4,37 @@ using Zenject;
 
 namespace Lonely
 {
-    public class EnemyState_Idle : IState, ITurnable
+    public class EnemyState_Idle : GuardianState
     {
-        #region Explicit Interface
+        public EnemyState_Idle(IStateEnter enter, IStateExit exit, IStateUpdate update, ITurnable turnable)
+            : base(enter, exit, update, turnable)
+        {
+        }
 
-        void IState.Enter()
+        public class CustomFactory : IFactory<GuardianState>
+        {
+            #region interface
+
+            GuardianState IFactory<GuardianState>.Create()
+            {
+                var binder = GuardianStateBinder<EnemyState_Idle>.For(_container);
+                return binder.Turn<EnemyStateIdle_Turn>().Enter<EnemyStateIdle_Enter>().Make();
+            }
+
+            #endregion interface
+
+            private readonly DiContainer _container;
+
+            public CustomFactory(DiContainer container)
+            {
+                _container = container;
+            }
+        }
+    }
+
+    public class EnemyStateIdle_Enter : IStateEnter
+    {
+        void IStateEnter.Enter()
         {
             Debug.Log("EnemyState_Idle Enter");
             _model.ResetDirection();
@@ -16,23 +42,14 @@ namespace Lonely
             FindingPlayer();
         }
 
-        void IState.Exit()
-        {
-        }
-
-        void ITurnable.Turn()
-        {
-            FindingPlayer();
-        }
-
-        #endregion Explicit Interface
-
-        private readonly EnemyFSM _fsm;
         private readonly EnemyModel _model;
+        private readonly GuardianFSM _fsm;
         private readonly EnemyEye _eye;
         private readonly GameCommands.PlayerTurn _playerTurn;
 
-        public EnemyState_Idle(EnemyFSM fsm, EnemyModel model, EnemyEye eye, GameCommands.PlayerTurn playerTurn)
+        public EnemyStateIdle_Enter(GuardianFSM fsm,
+                               EnemyModel model, EnemyEye eye,
+                               GameCommands.PlayerTurn playerTurn)
         {
             _fsm = fsm;
             _model = model;
@@ -68,13 +85,74 @@ namespace Lonely
                 _fsm.ChangeState<EnemyState_MoveToTarget>();
             }
         }
+    }
 
-        public class Factory : Factory<EnemyState_Idle>
-        { }
+    public class EnemyStateIdle_Turn : ITurnable
+    {
+        void ITurnable.Turn()
+        {
+            FindingPlayer();
+        }
+
+        private readonly EnemyModel _model;
+        private readonly GuardianFSM _fsm;
+        private readonly EnemyEye _eye;
+        private readonly GameCommands.PlayerTurn _playerTurn;
+
+        public EnemyStateIdle_Turn(EnemyModel model, GuardianFSM fsm, EnemyEye eye, GameCommands.PlayerTurn playerTurn)
+        {
+            _model = model;
+            _fsm = fsm;
+            _eye = eye;
+            _playerTurn = playerTurn;
+        }
+
+        private void FindingPlayer()
+        {
+            Player player;
+            if (_eye.Look(out player))
+            {
+                MoveToPlayer(player);
+            }
+            else
+            {
+                _playerTurn.Execute();
+            }
+        }
+
+        private void MoveToPlayer(Player player)
+        {
+            if (Vector2.Distance(_model.position, player.XY()).IsLessOrEqual(1))
+            {
+                player.Die();
+
+                _model.position = player.XY();
+                _fsm.ChangeState<EnemyState_Kill>();
+            }
+            else
+            {
+                _model.targetPos = player.XY();
+                _fsm.ChangeState<EnemyState_MoveToTarget>();
+            }
+        }
     }
 
     public interface ITurnable
     {
         void Turn();
+    }
+
+    public abstract class Turnable : ITurnable
+    {
+        void ITurnable.Turn()
+        {
+        }
+
+        public static readonly ITurnable Null = new NullTurnable();
+
+        private class NullTurnable : ITurnable
+        {
+            void ITurnable.Turn() { }
+        }
     }
 }

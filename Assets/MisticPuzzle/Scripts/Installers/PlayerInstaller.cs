@@ -21,12 +21,11 @@ namespace Lonely
         private void InstallPlayerState()
         {
             Container.BindAllInterfacesAndSelf<PlayerFSM>().To<PlayerFSM>().AsSingle();
-            // Circular dependency 때문에 Factory로
-            Container.BindFactory<PlayerState_Idle, PlayerState_Idle.Factory>();
-            Container.BindFactory<PlayerState_Move, PlayerState_Move.Factory>();
-            Container.BindFactory<PlayerState_Block, PlayerState_Block.Factory>();
-            Container.BindFactory<PlayerState_Kill, PlayerState_Kill.Factory>();
-            Container.BindFactory<PlayerState_Die, PlayerState_Die.Factory>();
+            Container.BindFactory<State, State.Factory>().FromFactory<PlayerState_Idle.CustomFactory>();
+            Container.BindFactory<State, State.Factory>().FromFactory<PlayerState_Move.CustomFactory>();
+            Container.BindFactory<State, State.Factory>().FromFactory<PlayerState_Block.CustomFactory>();
+            Container.BindFactory<State, State.Factory>().FromFactory<PlayerState_Kill.CustomFactory>();
+            Container.BindFactory<State, State.Factory>().FromFactory<PlayerState_Die.CustomFactory>();
         }
 
         private void InstallSettings()

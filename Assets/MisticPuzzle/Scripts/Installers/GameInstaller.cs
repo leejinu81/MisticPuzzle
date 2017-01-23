@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
 
@@ -15,8 +14,6 @@ namespace Lonely
             Container.BindAllInterfacesAndSelf<MisticPuzzleInput>().To<MisticPuzzleInput>().AsSingle();
 
             Container.BindAllInterfacesAndSelf<GameManager>().To<GameManager>().AsSingle();
-
-            Container.BindFactory<List<IState>, FSM, FSM.Factory>();
 
             Container.BindAllInterfacesAndSelf<UIManager>().To<UIManager>().AsSingle();
 

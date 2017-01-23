@@ -14,21 +14,26 @@ namespace Lonely
             Container.Bind<EnemyModel>().To<EnemyModel>().AsSingle();
             Container.Bind<EnemyEye>().To<EnemyEye>().AsSingle();
 
-            Container.BindAllInterfacesAndSelf<EnemyFSM>().To<EnemyFSM>().AsSingle();
-            Container.BindFactory<EnemyState_Idle, EnemyState_Idle.Factory>();
-            Container.BindFactory<EnemyState_MoveToTarget, EnemyState_MoveToTarget.Factory>();
-            Container.BindFactory<EnemyState_Return, EnemyState_Return.Factory>();
-            Container.BindFactory<EnemyState_Kill, EnemyState_Kill.Factory>();
-            Container.BindFactory<EnemyState_Die, EnemyState_Die.Factory>();
-
             Container.BindInstance(_settings.enemyCollider2D);
             Container.BindInstance(_settings.enemyTransform);
             Container.BindInstance(_settings.enemyGameObject);
-            Container.BindInstance(_settings.enemySprite);            
+            Container.BindInstance(_settings.enemySprite);
 
             Container.BindInstance(_settings.blockingLayer);
-            Container.BindInstance(_settings.moveTime);            
+            Container.BindInstance(_settings.moveTime);
             Container.BindInstance(_settings.direction);
+
+            InstallEnemyState();
+        }
+
+        private void InstallEnemyState()
+        {
+            Container.BindAllInterfacesAndSelf<GuardianFSM>().To<GuardianFSM>().AsSingle();
+            Container.BindFactory<GuardianState, GuardianState.Factory>().FromFactory<EnemyState_Idle.CustomFactory>();
+            Container.BindFactory<GuardianState, GuardianState.Factory>().FromFactory<EnemyState_MoveToTarget.CustomFactory>();
+            Container.BindFactory<GuardianState, GuardianState.Factory>().FromFactory<EnemyState_Return.CustomFactory>();
+            Container.BindFactory<GuardianState, GuardianState.Factory>().FromFactory<EnemyState_Kill.CustomFactory>();
+            Container.BindFactory<GuardianState, GuardianState.Factory>().FromFactory<EnemyState_Die.CustomFactory>();
         }
 
         [Serializable]
@@ -37,7 +42,7 @@ namespace Lonely
             public Collider2D enemyCollider2D;
             public Transform enemyTransform;
             public GameObject enemyGameObject;
-            public SpriteRenderer enemySprite;            
+            public SpriteRenderer enemySprite;
 
             public LayerMask blockingLayer;
             public float moveTime;

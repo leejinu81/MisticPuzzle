@@ -4,11 +4,39 @@ using Zenject;
 
 namespace Lonely
 {
-    public class EnemyState_Return : IState, ITurnable, ITitanShield
+    public class EnemyState_Return : GuardianState, ITitanShield
     {
-        #region Explicit Interface
+        public EnemyState_Return(IStateEnter enter, IStateExit exit, IStateUpdate update, ITurnable turnable)
+            : base(enter, exit, update, turnable)
+        {
+        }
 
-        void IState.Enter()
+        public class CustomFactory : IFactory<GuardianState>
+        {
+            #region interface
+
+            GuardianState IFactory<GuardianState>.Create()
+            {
+                var binder = GuardianStateBinder<EnemyState_Return>.For(_container);
+                return binder.Turn<EnemyStateReturn_Turn>()
+                             .Enter<EnemyStateReturn_Enter>()
+                             .Exit<EnemyStateReturn_Exit>().Make();
+            }
+
+            #endregion interface
+
+            private readonly DiContainer _container;
+
+            public CustomFactory(DiContainer container)
+            {
+                _container = container;
+            }
+        }
+    }
+
+    public class EnemyStateReturn_Enter : IStateEnter
+    {
+        void IStateEnter.Enter()
         {
             Debug.Log("EnemyState_Return Enter");
             _model.spriteColor = Color.red;
@@ -16,37 +44,55 @@ namespace Lonely
             SetReturnDirection();
         }
 
-        void IState.Exit()
-        {
-            _model.spriteColor = Color.white;
-        }
-
-        void ITurnable.Turn()
-        {            
-            Move(_model.dir);            
-        }
-
-        #endregion Explicit Interface
-
-        private readonly EnemyFSM _fsm;
         private readonly EnemyModel _model;
-        private readonly LayerMask _blockLayer;
-        private readonly GameCommands.PlayerTurn _playerTurn;
-        private readonly float _moveTime;
 
-        public EnemyState_Return(EnemyFSM fsm, EnemyModel model, LayerMask blockLayer, GameCommands.PlayerTurn playerTurn, float moveTime)
+        public EnemyStateReturn_Enter(EnemyModel model)
         {
-            _fsm = fsm;
             _model = model;
-            _blockLayer = blockLayer;
-            _playerTurn = playerTurn;
-            _moveTime = moveTime;
         }
 
         private void SetReturnDirection()
         {
             var dirToReturn = (_model.originPos - _model.position).normalized;
             _model.SetDirection(dirToReturn);
+        }
+    }
+
+    public class EnemyStateReturn_Exit : IStateExit
+    {
+        void IStateExit.Exit()
+        {
+            _model.spriteColor = Color.white;
+        }
+
+        private readonly EnemyModel _model;
+
+        public EnemyStateReturn_Exit(EnemyModel model)
+        {
+            _model = model;
+        }
+    }
+
+    public class EnemyStateReturn_Turn : ITurnable
+    {
+        void ITurnable.Turn()
+        {
+            Move(_model.dir);
+        }
+
+        private readonly GuardianFSM _fsm;
+        private readonly EnemyModel _model;
+        private readonly float _moveTime;
+        private readonly LayerMask _blockLayer;
+        private readonly GameCommands.PlayerTurn _playerTurn;
+
+        public EnemyStateReturn_Turn(GuardianFSM fsm, EnemyModel model, float moveTime, LayerMask blockLayer, GameCommands.PlayerTurn playerTurn)
+        {
+            _fsm = fsm;
+            _model = model;
+            _moveTime = moveTime;
+            _blockLayer = blockLayer;
+            _playerTurn = playerTurn;
         }
 
         private void Move(Vector2 dir)
@@ -72,7 +118,7 @@ namespace Lonely
         private void PlayerKill(Player player)
         {
             player.Die();
-            
+
             _model.targetPos = player.XY();
             _fsm.ChangeState<EnemyState_Kill>();
         }
@@ -95,8 +141,5 @@ namespace Lonely
 
             _playerTurn.Execute();
         }
-
-        public class Factory : Factory<EnemyState_Return>
-        { }
     }
 }

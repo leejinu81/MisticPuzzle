@@ -1,25 +1,13 @@
-﻿using Extension;
-using UnityEngine;
+﻿using UnityEngine;
 using Zenject;
 
 namespace Lonely
 {
     public class Enemy : MonoBehaviour
     {
-        private EnemyFSM _fsm;
+        private GuardianFSM _fsm;
 
-        // EnemyModel로 가야하나?
-        public bool isTitanShield
-        {
-            get
-            {
-                var ts = _fsm.curState as ITitanShield;
-                if (ts.IsValid())
-                    return true;
-                else
-                    return false;
-            }
-        }
+        public bool isTitanShield { get { return _fsm.isTitanShield; } }
 
         private void Start()
         {
@@ -27,7 +15,7 @@ namespace Lonely
         }
 
         [Inject]
-        private void Inject(EnemyFSM fsm)
+        private void Inject(GuardianFSM fsm)
         {
             _fsm = fsm;
         }

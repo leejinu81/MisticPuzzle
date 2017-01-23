@@ -2,31 +2,48 @@
 
 namespace Lonely
 {
-    public class EnemyState_Kill : IState
+    public class EnemyState_Kill : GuardianState
     {
-        #region Explicit Interface
+        public EnemyState_Kill(IStateEnter enter, IStateExit exit, IStateUpdate update, ITurnable turnable)
+            : base(enter, exit, update, turnable)
+        {
+        }
 
-        void IState.Enter()
+        public class CustomFactory : IFactory<GuardianState>
+        {
+            #region interface
+
+            GuardianState IFactory<GuardianState>.Create()
+            {
+                var binder = GuardianStateBinder<EnemyState_Kill>.For(_container);
+                return binder.Enter<EnemyStateKill_Enter>().Make();
+            }
+
+            #endregion interface
+
+            private readonly DiContainer _container;
+
+            public CustomFactory(DiContainer container)
+            {
+                _container = container;
+            }
+        }
+    }
+
+    public class EnemyStateKill_Enter : IStateEnter
+    {
+        void IStateEnter.Enter()
         {
             _model.DOMove(_model.targetPos, _moveTime);
         }
 
-        void IState.Exit()
-        {
-        }
-
-        #endregion Explicit Interface
-
         private readonly EnemyModel _model;
         private readonly float _moveTime;
 
-        public EnemyState_Kill(EnemyModel model, float moveTime)
+        public EnemyStateKill_Enter(EnemyModel model, float moveTime)
         {
             _model = model;
             _moveTime = moveTime;
         }
-
-        public class Factory : Factory<EnemyState_Kill>
-        { }
     }
 }

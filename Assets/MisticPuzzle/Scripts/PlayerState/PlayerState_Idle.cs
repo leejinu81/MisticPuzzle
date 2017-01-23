@@ -4,19 +4,39 @@ using Zenject;
 
 namespace Lonely
 {
-    public class PlayerState_Idle : IState, ITickable
+    public class PlayerState_Idle : State
+    {
+        public PlayerState_Idle(IStateEnter enter, IStateExit exit, IStateUpdate update)
+            : base(enter, exit, update)
+        {
+        }
+
+        public class CustomFactory : IFactory<State>
+        {
+            #region interface
+
+            State IFactory<State>.Create()
+            {
+                var binder = StateBinder<PlayerState_Idle>.For(_container);
+                return binder.Update<PlayerStateIdle_Update>().Make();
+            }
+
+            #endregion interface
+
+            private readonly DiContainer _container;
+
+            public CustomFactory(DiContainer container)
+            {
+                _container = container;
+            }
+        }
+    }
+
+    public class PlayerStateIdle_Update : IStateUpdate
     {
         #region Explicit Interface
 
-        void IState.Enter()
-        {
-        }
-
-        void IState.Exit()
-        {
-        }
-
-        void ITickable.Tick()
+        void IStateUpdate.Update()
         {
             if (Equals(_input.horizontal, 0).IsFalse() || Equals(_input.vertical, 0).IsFalse())
             {
@@ -31,7 +51,7 @@ namespace Lonely
         private readonly PlayerModel _model;
         private readonly LayerMask _blockLayer;
 
-        public PlayerState_Idle(PlayerFSM fsm, PlayerModel model, MisticPuzzleInput input, LayerMask blockLayer)
+        public PlayerStateIdle_Update(PlayerFSM fsm, PlayerModel model, MisticPuzzleInput input, LayerMask blockLayer)
         {
             _fsm = fsm;
             _input = input;
@@ -74,6 +94,7 @@ namespace Lonely
             if (enemy.isTitanShield)
             {
                 _model.movePosition = enemy.XY();
+
                 _fsm.ChangeState<PlayerState_Block>();
             }
             else
@@ -91,10 +112,6 @@ namespace Lonely
             _model.enableCollider = true;
 
             return hitInfo;
-        }
-
-        public class Factory : Factory<PlayerState_Idle>
-        {
         }
     }
 }

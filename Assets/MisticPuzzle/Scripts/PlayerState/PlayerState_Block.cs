@@ -1,24 +1,54 @@
-﻿using DG.Tweening;
-using Extension;
+﻿using Extension;
 using Zenject;
 
 namespace Lonely
 {
-    public class PlayerState_Block : IState, ITickable
+    public class PlayerState_Block : State
     {
-        #region Explicit Interface
-
-        void IState.Enter()
+        public PlayerState_Block(IStateEnter enter, IStateExit exit, IStateUpdate update)
+            : base(enter, exit, update)
         {
-            //_model.DOMove(_model.movePosition, _moveTime);            
+        }
+
+        public class CustomFactory : IFactory<State>
+        {
+            #region interface
+
+            State IFactory<State>.Create()
+            {
+                var binder = StateBinder<PlayerState_Block>.For(_container);
+                return binder.Enter<PlayerStateBlock_Enter>().Update<PlayerStateBlock_Update>().Make();
+            }
+
+            #endregion interface
+
+            private readonly DiContainer _container;
+
+            public CustomFactory(DiContainer container)
+            {
+                _container = container;
+            }
+        }
+    }
+
+    public class PlayerStateBlock_Enter : IStateEnter
+    {
+        void IStateEnter.Enter()
+        {
             _model.DOBlock();
         }
 
-        void IState.Exit()
-        {
-        }
+        private readonly PlayerModel _model;
 
-        void ITickable.Tick()
+        public PlayerStateBlock_Enter(PlayerModel model)
+        {
+            _model = model;
+        }
+    }
+
+    public class PlayerStateBlock_Update : IStateUpdate
+    {
+        void IStateUpdate.Update()
         {
             if (IsOverMoveTime())
             {
@@ -26,16 +56,12 @@ namespace Lonely
             }
         }
 
-        #endregion Explicit Interface
-
         private readonly PlayerFSM _fsm;
-        private readonly PlayerModel _model;
         private readonly float _moveTime;
 
-        public PlayerState_Block(PlayerFSM fsm, PlayerModel model, float moveTime)
+        public PlayerStateBlock_Update(PlayerFSM fsm, float moveTime)
         {
             _fsm = fsm;
-            _model = model;
             _moveTime = moveTime;
         }
 
@@ -43,8 +69,5 @@ namespace Lonely
         {
             return _fsm.stateTime.IsGreater(_moveTime);
         }
-
-        public class Factory : Factory<PlayerState_Block>
-        { }
     }
 }
