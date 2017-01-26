@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using ModestTree;
+using System;
 using UnityEngine;
 using Zenject;
 
@@ -14,21 +13,35 @@ namespace Lonely
         public override void InstallBindings()
         {
             Container.Bind<EnemyModel>().To<EnemyModel>().AsSingle();
-            Container.Bind<EnemyEye>().To<EnemyEye>().AsSingle();
 
-            //Container.BindAllInterfacesAndSelf<EnemyFSM>().To<EnemyFSM>().AsSingle();
-            //Container.BindFactory<EnemyState_Patrol, EnemyState_Patrol.Factory>();
-            //Container.BindFactory<EnemyState_Kill, EnemyState_Kill.Factory>();
-            //Container.BindFactory<EnemyState_Die, EnemyState_Die.Factory>();
+            Container.BindInstance(_settings.enemyCollider2D);
+            Container.BindInstance(_settings.enemyTransform);
+            Container.BindInstance(_settings.enemyGameObject);
+            Container.BindInstance(_settings.enemySprite);
 
-            //Container.BindInstance(_settings.enemyCollider2D);
-            //Container.BindInstance(_settings.enemyTransform);
-            //Container.BindInstance(_settings.enemyGameObject);
-            //Container.BindInstance(_settings.enemySprite);
+            Container.BindInstance(_settings.blockingLayer);
+            Container.BindInstance(_settings.moveTime);
+            Container.BindInstance(_settings.direction);
 
-            //Container.BindInstance(_settings.blockingLayer);
-            //Container.BindInstance(_settings.moveTime);
-            //Container.BindInstance(_settings.direction);
+            InstallStates();
+            InitExecutionOrder();
+        }
+
+        private void InstallStates()
+        {
+            Container.Bind<IInitializable>().To<PatrolEnemy>().AsSingle();
+            Container.Bind<Enemy>().To<PatrolEnemy>().AsSingle();
+                        
+            Container.BindAllInterfacesAndSelf<PatrolEnemyFSM>().To<PatrolEnemyFSM>().AsSingle();
+            Container.BindFactory<EnemyState, EnemyState.Factory>().FromFactory<EnemyState_Patrol.CustomFactory>();
+            Container.BindFactory<EnemyState, EnemyState.Factory>().FromFactory<EnemyState_Kill.CustomFactory>();
+            Container.BindFactory<EnemyState, EnemyState.Factory>().FromFactory<EnemyState_Die.CustomFactory>();
+        }
+
+        private void InitExecutionOrder()
+        {            
+            Container.BindExecutionOrder<PatrolEnemy>(-10);
+            Container.BindExecutionOrder<PatrolEnemyFSM>(-20);
         }
     }
 

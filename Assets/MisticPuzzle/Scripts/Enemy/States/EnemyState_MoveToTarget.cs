@@ -4,23 +4,26 @@ using Zenject;
 
 namespace Lonely
 {
-    public class EnemyState_MoveToTarget : GuardianState, ITitanShield
+    public class EnemyState_MoveToTarget : EnemyState
     {
-        public EnemyState_MoveToTarget(IStateEnter enter, IStateExit exit, IStateUpdate update, ITurnable turnable)
-            : base(enter, exit, update, turnable)
+        public EnemyState_MoveToTarget(IStateEnter enter, IStateExit exit, IStateUpdate update,
+                                       ITurnable turnable, ITitanShield titanShield)
+            : base(enter, exit, update, turnable, titanShield)
         {
         }
 
-        public class CustomFactory : IFactory<GuardianState>
+        public class CustomFactory : IFactory<EnemyState>
         {
             #region interface
 
-            GuardianState IFactory<GuardianState>.Create()
+            EnemyState IFactory<EnemyState>.Create()
             {
-                var binder = GuardianStateBinder<EnemyState_MoveToTarget>.For(_container);
-                return binder.Turn<EnemyStateMoveToTarget_Turn>()
-                             .Enter<EnemyStateMoveToTarget_Enter>()
-                             .Exit<EnemyStateMoveToTarget_Exit>().Make();
+                return StateBinder.Bind(_container)
+                                  .Enter<EnemyStateMoveToTarget_Enter>()
+                                  .Exit<EnemyStateMoveToTarget_Exit>()
+                                  .Turn<EnemyStateMoveToTarget_Turn>()
+                                  .Shield<TitanShield>()
+                                  .Make<EnemyState_MoveToTarget>();
             }
 
             #endregion interface
@@ -37,8 +40,7 @@ namespace Lonely
     public class EnemyStateMoveToTarget_Enter : IStateEnter
     {
         void IStateEnter.Enter()
-        {
-            Debug.Log("EnemyState_MoveToTarget Enter");
+        {            
             _model.DOSpriteFade(Color.red, _moveTime, () => _playerTurn.Execute());
             _model.enableTarget = true;
         }
@@ -145,9 +147,5 @@ namespace Lonely
 
             _playerTurn.Execute();
         }
-    }
-
-    public interface ITitanShield
-    {
     }
 }

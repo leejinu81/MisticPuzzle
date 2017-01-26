@@ -2,21 +2,23 @@
 
 namespace Lonely
 {
-    public class EnemyState_Kill : GuardianState
+    public class EnemyState_Kill : EnemyState
     {
-        public EnemyState_Kill(IStateEnter enter, IStateExit exit, IStateUpdate update, ITurnable turnable)
-            : base(enter, exit, update, turnable)
+        public EnemyState_Kill(IStateEnter enter, IStateExit exit, IStateUpdate update,
+                               ITurnable turnable, ITitanShield titanShield)
+            : base(enter, exit, update, turnable, titanShield)
         {
         }
 
-        public class CustomFactory : IFactory<GuardianState>
+        public class CustomFactory : IFactory<EnemyState>
         {
             #region interface
 
-            GuardianState IFactory<GuardianState>.Create()
+            EnemyState IFactory<EnemyState>.Create()
             {
-                var binder = GuardianStateBinder<EnemyState_Kill>.For(_container);
-                return binder.Enter<EnemyStateKill_Enter>().Make();
+                return StateBinder.Bind(_container)
+                                  .Enter<EnemyStateKill_Enter>()
+                                  .Make<EnemyState_Kill>();
             }
 
             #endregion interface

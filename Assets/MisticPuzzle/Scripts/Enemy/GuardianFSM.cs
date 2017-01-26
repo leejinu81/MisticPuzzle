@@ -3,12 +3,12 @@ using Zenject;
 
 namespace Lonely
 {
-    public class GuardianFSM : FSM<GuardianState>
+    public class GuardianFSM : FSM<EnemyState>
     {
-        public bool isTitanShield { get { return _curState is ITitanShield; } }
+        public bool hasTitanSheild { get { return _curState.hasTitanSheild; } }
 
-        public GuardianFSM(List<GuardianState.Factory> stateFactoryList)
-            : base(stateFactoryList.ConvertAll(x => x as IFactory<GuardianState>))
+        public GuardianFSM(List<EnemyState.Factory> stateFactoryList)
+            : base(stateFactoryList.ConvertAll(x => x as IFactory<EnemyState>), EnemyState.Null)
         {
         }
 

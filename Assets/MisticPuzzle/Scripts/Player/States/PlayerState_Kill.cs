@@ -16,8 +16,9 @@ namespace Lonely
 
             State IFactory<State>.Create()
             {
-                var binder = StateBinder<PlayerState_Kill>.For(_container);
-                return binder.Enter<PlayerStateKill_Enter>().Make();
+                return StateBinder.Bind(_container)
+                                  .Enter<PlayerStateKill_Enter>()
+                                  .Make<PlayerState_Kill>();
             }
 
             #endregion interface

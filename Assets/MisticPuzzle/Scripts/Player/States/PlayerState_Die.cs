@@ -7,7 +7,7 @@ namespace Lonely
         public PlayerState_Die(IStateEnter enter, IStateExit exit, IStateUpdate update)
             : base(enter, exit, update)
         {
-        }        
+        }
 
         public class CustomFactory : IFactory<State>
         {
@@ -15,8 +15,9 @@ namespace Lonely
 
             State IFactory<State>.Create()
             {
-                var binder = StateBinder<PlayerState_Die>.For(_container);
-                return binder.Enter<PlayerStateDie_Enter>().Make();
+                return StateBinder.Bind(_container)
+                                  .Enter<PlayerStateDie_Enter>()
+                                  .Make<PlayerState_Die>();
             }
 
             #endregion interface
@@ -28,7 +29,7 @@ namespace Lonely
                 _container = container;
             }
         }
-    }    
+    }
 
     public class PlayerStateDie_Enter : IStateEnter
     {

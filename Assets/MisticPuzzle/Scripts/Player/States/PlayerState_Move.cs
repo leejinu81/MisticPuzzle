@@ -15,8 +15,9 @@ namespace Lonely
 
             State IFactory<State>.Create()
             {
-                var binder = StateBinder<PlayerState_Move>.For(_container);
-                return binder.Enter<PlayerStateMove_Enter>().Make();
+                return StateBinder.Bind(_container)
+                                  .Enter<PlayerStateMove_Enter>()
+                                  .Make<PlayerState_Move>();
             }
 
             #endregion interface
@@ -58,6 +59,7 @@ namespace Lonely
 
         private void OnMoveComplete()
         {
+            _model.position = _model.movePosition;
             _fsm.ChangeState<PlayerState_Idle>();
             _enemyTurnCommand.Execute();
         }

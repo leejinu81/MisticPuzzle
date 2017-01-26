@@ -21,17 +21,17 @@ namespace Lonely
     {
         #region interface
 
-        public void Enter()
+        public virtual void Enter()
         {
             _enter.Enter();
         }
 
-        public void Exit()
+        public virtual void Exit()
         {
             _exit.Exit();
         }
 
-        public void Update()
+        public virtual void Update()
         {
             _update.Update();
         }
@@ -49,7 +49,7 @@ namespace Lonely
             _update = update;
         }
 
-        public static readonly State Null = new NullState();
+        public static State Null = new NullState();
 
         private class NullState : State
         {

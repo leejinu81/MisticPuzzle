@@ -76,53 +76,66 @@ namespace Lonely
 
         #endregion IDisposable Support
 
-        // FIXME
-        public State curState { get { return _curState; } }
-
         public float stateTime { get { return _stateTime; } }
 
-        protected readonly List<IFactory<TState>> _stateFactoryList;
+        private readonly List<IFactory<TState>> _stateFactoryList;
         private readonly Dictionary<Type, TState> _stateDic = new Dictionary<Type, TState>();
         private TState _prevState;
         protected TState _curState;
 
         private float _stateTime;
 
-        public FSM(List<IFactory<TState>> stateFactoryList)
+        public FSM(List<IFactory<TState>> stateFactoryList, TState NullState)
         {
             _stateFactoryList = stateFactoryList;
+            _prevState = _curState = NullState;
         }
 
         public bool IsPrevState<TStateType>()
             where TStateType : State
         {
-            return Equals(typeof(TStateType), _prevState.GetType());
+            return IsPrevState(typeof(TStateType));
+        }
+
+        public bool IsPrevState(Type stateType)
+        {
+            return Equals(stateType, _prevState.GetType());
         }
 
         public bool IsCurrentState<TStateType>()
             where TStateType : State
         {
-            return Equals(typeof(TStateType), _curState.GetType());
+            return IsCurrentState(typeof(TStateType));
+        }
+
+        public bool IsCurrentState(Type stateType)
+        {
+            return Equals(stateType, _curState.GetType());
         }
 
         public void ChangeState<TStateType>()
             where TStateType : State
         {
+            ChangeState(typeof(TStateType));
+        }
+
+        public void ChangeState(Type stateType)
+        {
             TState state = null;
-            if (_stateDic.TryGetValue(typeof(TStateType), out state))
+            if (_stateDic.TryGetValue(stateType, out state))
             {
-                if (_curState.IsValid())
-                    _curState.Exit();
+                _curState.Exit();
 
                 _prevState = _curState;
                 _curState = state;
+
                 _curState.Enter();
 
                 _stateTime = 0.0f;
             }
 
             if (state.IsNull())
-                Debug.Log("Not Find " + typeof(TStateType) + " State.");
+                Debug.Log("Not Find " + stateType.Name + " State.");
         }
     }
 }

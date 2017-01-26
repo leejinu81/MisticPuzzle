@@ -1,29 +1,22 @@
-﻿using System.Collections.Generic;
+﻿using Extension;
+using System.Collections.Generic;
 using UnityEngine;
-using Zenject;
 
 namespace Lonely
 {
-    public class GameManager : IInitializable
+    public class GameManager
     {
-        #region Explicit Interface
-
-        void IInitializable.Initialize()
-        {
-            // FIXME
-            var GO = GameObject.Find("Start");
-            _player.transform.position = GO.transform.position;
-        }
-
-        #endregion Explicit Interface
-
         private readonly Player _player;
-        private readonly List<Enemy> _enemys;
+        private readonly List<EnemyFacade> _enemies;
 
-        public GameManager(Player player, List<Enemy> enemys)
+        public GameManager(Player player, List<EnemyFacade> enemies)
         {
             _player = player;
-            _enemys = enemys;
+            _enemies = enemies;
+
+            var GO = GameObject.Find("Start");
+            if (GO.IsValid())
+                _player.transform.position = GO.transform.position;
         }
 
         public void PlayerTurn()
@@ -33,10 +26,10 @@ namespace Lonely
 
         public void EnemyTurn()
         {
-            foreach(var e in _enemys)
+            foreach (var e in _enemies)
             {
-                e.EnemyTurn();
+                e.Turn();
             }
         }
-    }    
+    }
 }

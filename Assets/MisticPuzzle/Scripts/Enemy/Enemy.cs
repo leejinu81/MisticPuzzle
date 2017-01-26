@@ -3,33 +3,26 @@ using Zenject;
 
 namespace Lonely
 {
-    public class Enemy : MonoBehaviour
+    public abstract class Enemy : IInitializable
     {
-        private GuardianFSM _fsm;
-
-        public bool isTitanShield { get { return _fsm.isTitanShield; } }
-
-        private void Start()
+        void IInitializable.Initialize()
         {
-            _fsm.ChangeState<EnemyState_Idle>();
+            Initialize();
         }
 
-        [Inject]
-        private void Inject(GuardianFSM fsm)
+        public abstract bool hasTitanSheild { get; }
+
+        public Enemy()
         {
-            _fsm = fsm;
         }
 
-        public void EnemyTurn()
-        {
-            _fsm.EnemyTurn();
-        }
+        protected virtual void Initialize()
+        { }
 
-        public void Die()
-        {
-            _fsm.ChangeState<EnemyState_Die>();
-        }
-    }
+        public abstract void Die();
+
+        public abstract void Turn();
+    }    
 
     public class TargetPositionFactory : Factory<GameObject>
     {

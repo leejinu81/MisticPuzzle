@@ -1,25 +1,34 @@
-﻿using NSubstitute;
+﻿using Extension;
+using NSubstitute;
 using NUnit.Framework;
-using System;
 using System.Collections.Generic;
+using Zenject;
 
 namespace Lonely.UnitTest
 {
     [TestFixture]
     public class UnitTest_FSM
     {
-        //private IState _idleState, _moveState;
-        //private List<IState> _states = new List<IState>();
+        private PlayerState_Idle _idleState;
+        private PlayerState_Move _moveState;
 
-        //[TestFixtureSetUp]
-        //public void TestFixtureSetUp()
-        //{
-        //    _idleState = Substitute.For<IState, PlayerState_Idle>(null, null);
-        //    _states.Add(_idleState);
+        private List<IFactory<State>> _factories = new List<IFactory<State>>();
 
-        //    _moveState = Substitute.For<IState, PlayerState_Move>(null, null, null, 0.0f);
-        //    _states.Add(_moveState);
-        //}
+        [TestFixtureSetUp]
+        public void TestFixtureSetUp()
+        {
+            // idle
+            _idleState = Substitute.For<PlayerState_Idle>(State.Null, State.Null, State.Null);
+            var idleFactory = Substitute.For<IFactory<State>>();
+            idleFactory.Create().Returns(_idleState);
+            _factories.Add(idleFactory);
+
+            // move
+            _moveState = Substitute.For<PlayerState_Move>(State.Null, State.Null, State.Null);
+            var moveFactory = Substitute.For<IFactory<State>>();
+            moveFactory.Create().Returns(_moveState);
+            _factories.Add(moveFactory);
+        }
 
         //[SetUp]
         //public void SetUp()
@@ -31,69 +40,49 @@ namespace Lonely.UnitTest
         //{
         //}
 
-        //private TestFSM GetFSM() { return new TestFSM(_states); }
+        private TestFSM GetFSM()
+        {
+            var fsm = new TestFSM(_factories);
+            var init = fsm as IInitializable;
+            if (init.IsValid())
+                init.Initialize();
 
-        //[Test]
-        //public void 기본State는_NullState이다()
-        //{
-        //    //var fsm = GetFSM();
-        //    //var current = fsm.GetCurrent();
-        //    //Assert.That(current, Is.SameAs(State.Null));
-        //}
+            return fsm;
+        }
 
-        //[Test]
-        //[ExpectedException(typeof(ArgumentOutOfRangeException))]
-        //public void ChangeState시_IState를_파라미터로_넣으면_예외가_발생해야한다()
-        //{
-        //    var fsm = GetFSM();
-        //    fsm.ChangeState<IState>();
-        //}
+        [Test]
+        public void ChangeState시_새로운_State에_Enter함수를_호출해준다()
+        {
+            var fsm = GetFSM();
+            fsm.ChangeState(_idleState.GetType());
 
-        //[Test]
-        //public void ChangeState시_새로운_State에_Enter함수를_호출해준다()
-        //{
-        //    //var fsm = GetFSM();
-        //    //fsm.ChangeState<PlayerState_Idle>();
+            _idleState.Received().Enter();
 
-        //    //_idleState.Received().Enter();
+            Assert.That(fsm.IsCurrentState(_idleState.GetType()));
 
-        //    //var current = fsm.GetCurrent();
-        //    //Assert.That(current, Is.SameAs(_idleState));
-        //}
+            // Change Move State
+            fsm.ChangeState(_moveState.GetType());
 
-        //[Test]
-        //public void ChangeState시_새로운_State가_current로_바뀐다()
-        //{
-        //    //var fsm = GetFSM();
-        //    //fsm.ChangeState<PlayerState_Idle>();
+            _moveState.Received().Enter();
 
-        //    //var current = fsm.GetCurrent();
-        //    //Assert.That(current, Is.SameAs(_idleState));
-        //}
+            Assert.That(fsm.IsCurrentState(_moveState.GetType()));
+        }
 
-        //[Test]
-        //public void ChangeState시_이전State는_Exit함수를_호출해준다()
-        //{
-        //    //var fsm = GetFSM();
-        //    //fsm.ChangeState<PlayerState_Idle>();
-        //    //fsm.ChangeState<PlayerState_Move>();
+        [Test]
+        public void ChangeState시_이전State는_Exit함수를_호출해준다()
+        {
+            var fsm = GetFSM();
+            fsm.ChangeState(_idleState.GetType());
+            fsm.ChangeState(_moveState.GetType());
 
-        //    //_idleState.Received().Exit();
-        //}
+            _idleState.Received().Exit();
+        }
 
-        //public class TestFSM : FSM
-        //{
-        //    public TestFSM(List<IState> states) : base()
-        //    {
-        //    }
-
-        //    public void ChangeState<T>()
-        //        where T : class, IState
-        //    {
-        //        ((IFSM)this).ChangeState<T>();
-        //    }
-
-        //    public IState GetCurrent() { return _curState; }
-        //}
+        public class TestFSM : FSM<State>
+        {
+            public TestFSM(List<IFactory<State>> stateFactoryList)
+                : base(stateFactoryList, State.Null)
+            { }
+        }
     }
 }

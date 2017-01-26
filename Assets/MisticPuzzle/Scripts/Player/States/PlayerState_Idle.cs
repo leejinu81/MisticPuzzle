@@ -17,8 +17,9 @@ namespace Lonely
 
             State IFactory<State>.Create()
             {
-                var binder = StateBinder<PlayerState_Idle>.For(_container);
-                return binder.Update<PlayerStateIdle_Update>().Make();
+                return StateBinder.Bind(_container)
+                                  .Update<PlayerStateIdle_Update>()
+                                  .Make<PlayerState_Idle>();
             }
 
             #endregion interface
@@ -82,16 +83,16 @@ namespace Lonely
             }
             else if (hitInfo.transform.CompareTag("Enemy"))
             {
-                var enemy = hitInfo.transform.GetComponent<Enemy>();
+                var enemy = hitInfo.transform.GetComponent<EnemyFacade>();
                 Debug.Assert(enemy.IsValid());
 
                 MoveToEnemy(enemy);
             }
         }
 
-        private void MoveToEnemy(Enemy enemy)
+        private void MoveToEnemy(EnemyFacade enemy)
         {
-            if (enemy.isTitanShield)
+            if (enemy.hasTitanSheild)
             {
                 _model.movePosition = enemy.XY();
 

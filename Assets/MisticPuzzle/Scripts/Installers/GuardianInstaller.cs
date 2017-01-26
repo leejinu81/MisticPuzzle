@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using UnityEngine;
 using Zenject;
 
 namespace Lonely
 {
-    public class EnemyInstaller : MonoInstaller<EnemyInstaller>
+    public class GuardianInstaller : MonoInstaller<GuardianInstaller>
     {
         [SerializeField]
         private Settings _settings = null;
@@ -23,17 +23,27 @@ namespace Lonely
             Container.BindInstance(_settings.moveTime);
             Container.BindInstance(_settings.direction);
 
-            InstallEnemyState();
+            InstallStates();
+            InitExecutionOrder();
         }
 
-        private void InstallEnemyState()
+        private void InstallStates()
         {
+            Container.Bind<IInitializable>().To<Guardian>().AsSingle();
+            Container.Bind<Enemy>().To<Guardian>().AsSingle();
+
             Container.BindAllInterfacesAndSelf<GuardianFSM>().To<GuardianFSM>().AsSingle();
-            Container.BindFactory<GuardianState, GuardianState.Factory>().FromFactory<EnemyState_Idle.CustomFactory>();
-            Container.BindFactory<GuardianState, GuardianState.Factory>().FromFactory<EnemyState_MoveToTarget.CustomFactory>();
-            Container.BindFactory<GuardianState, GuardianState.Factory>().FromFactory<EnemyState_Return.CustomFactory>();
-            Container.BindFactory<GuardianState, GuardianState.Factory>().FromFactory<EnemyState_Kill.CustomFactory>();
-            Container.BindFactory<GuardianState, GuardianState.Factory>().FromFactory<EnemyState_Die.CustomFactory>();
+            Container.BindFactory<EnemyState, EnemyState.Factory>().FromFactory<EnemyState_Idle.CustomFactory>();
+            Container.BindFactory<EnemyState, EnemyState.Factory>().FromFactory<EnemyState_MoveToTarget.CustomFactory>();
+            Container.BindFactory<EnemyState, EnemyState.Factory>().FromFactory<EnemyState_Return.CustomFactory>();
+            Container.BindFactory<EnemyState, EnemyState.Factory>().FromFactory<EnemyState_Kill.CustomFactory>();
+            Container.BindFactory<EnemyState, EnemyState.Factory>().FromFactory<EnemyState_Die.CustomFactory>();
+        }
+
+        private void InitExecutionOrder()
+        {
+            Container.BindExecutionOrder<Guardian>(-10);
+            Container.BindExecutionOrder<GuardianFSM>(-20);
         }
 
         [Serializable]

@@ -4,23 +4,24 @@ using Zenject;
 
 namespace Lonely
 {
-    public class EnemyState_Return : GuardianState, ITitanShield
+    public class EnemyState_Patrol : EnemyState
     {
-        public EnemyState_Return(IStateEnter enter, IStateExit exit, IStateUpdate update, ITurnable turnable)
-            : base(enter, exit, update, turnable)
+        public EnemyState_Patrol(IStateEnter enter, IStateExit exit, IStateUpdate update,
+                                     ITurnable turnable, ITitanShield titanShield)
+            : base(enter, exit, update, turnable, titanShield)
         {
         }
 
-        public class CustomFactory : IFactory<GuardianState>
+        public class CustomFactory : IFactory<EnemyState>
         {
             #region interface
 
-            GuardianState IFactory<GuardianState>.Create()
+            EnemyState IFactory<EnemyState>.Create()
             {
-                var binder = GuardianStateBinder<EnemyState_Return>.For(_container);
-                return binder.Turn<EnemyStateReturn_Turn>()
-                             .Enter<EnemyStateReturn_Enter>()
-                             .Exit<EnemyStateReturn_Exit>().Make();
+                return StateBinder.Bind(_container)
+                                  .Enter<EnemyStatePatrol_Enter>()
+                                  .Turn<EnemyStatePatrol_Turn>()
+                                  .Make<EnemyState_Patrol>();
             }
 
             #endregion interface
@@ -34,59 +35,35 @@ namespace Lonely
         }
     }
 
-    public class EnemyStateReturn_Enter : IStateEnter
+    public class EnemyStatePatrol_Enter : IStateEnter
     {
         void IStateEnter.Enter()
         {
-            Debug.Log("EnemyState_Return Enter");
-            _model.spriteColor = Color.red;
             _model.enableTarget = false;
-            SetReturnDirection();
         }
 
         private readonly EnemyModel _model;
 
-        public EnemyStateReturn_Enter(EnemyModel model)
-        {
-            _model = model;
-        }
-
-        private void SetReturnDirection()
-        {
-            var dirToReturn = (_model.originPos - _model.position).normalized;
-            _model.SetDirection(dirToReturn);
-        }
-    }
-
-    public class EnemyStateReturn_Exit : IStateExit
-    {
-        void IStateExit.Exit()
-        {
-            _model.spriteColor = Color.white;
-        }
-
-        private readonly EnemyModel _model;
-
-        public EnemyStateReturn_Exit(EnemyModel model)
+        public EnemyStatePatrol_Enter(EnemyModel model)
         {
             _model = model;
         }
     }
 
-    public class EnemyStateReturn_Turn : ITurnable
+    public class EnemyStatePatrol_Turn : ITurnable
     {
         void ITurnable.Turn()
         {
             Move(_model.dir);
         }
 
-        private readonly GuardianFSM _fsm;
+        private readonly PatrolEnemyFSM _fsm;
         private readonly EnemyModel _model;
         private readonly float _moveTime;
         private readonly LayerMask _blockLayer;
         private readonly GameCommands.PlayerTurn _playerTurn;
 
-        public EnemyStateReturn_Turn(GuardianFSM fsm, EnemyModel model, float moveTime, LayerMask blockLayer, GameCommands.PlayerTurn playerTurn)
+        public EnemyStatePatrol_Turn(PatrolEnemyFSM fsm, EnemyModel model, float moveTime, LayerMask blockLayer, GameCommands.PlayerTurn playerTurn)
         {
             _fsm = fsm;
             _model = model;
@@ -103,7 +80,6 @@ namespace Lonely
             var hitInfo = Linecast(startPos, endPos);
             if (hitInfo.transform.IsNull())
             {
-                //_model.position = _model.position + dir;
                 _model.DOMove(_model.position + dir, _moveTime, OnMoveComplete);
             }
             else if (hitInfo.transform.CompareTag("Player"))
@@ -112,6 +88,11 @@ namespace Lonely
                 Debug.Assert(player.IsValid());
 
                 PlayerKill(player);
+            }
+            else if (hitInfo.transform.CompareTag("Wall"))
+            {
+                _model.SetDirection(-_model.dir);
+                _model.DOMove(_model.position + _model.dir, _moveTime, OnMoveComplete);
             }
         }
 
@@ -134,11 +115,6 @@ namespace Lonely
 
         private void OnMoveComplete()
         {
-            if (Equals(_model.position, _model.originPos))
-            {
-                _fsm.ChangeState<EnemyState_Idle>();
-            }
-
             _playerTurn.Execute();
         }
     }

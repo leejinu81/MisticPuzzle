@@ -1,14 +1,19 @@
 ﻿namespace Lonely
 {
-    public class PatrolEnemy : Enemy
+    public class Guardian : Enemy
     {
         public override bool hasTitanSheild { get { return _fsm.hasTitanSheild; } }
 
-        private PatrolEnemyFSM _fsm;
+        private readonly GuardianFSM _fsm;
 
-        public PatrolEnemy(PatrolEnemyFSM fsm) : base()
+        public Guardian(GuardianFSM fsm) : base()
         {
             _fsm = fsm;
+        }
+
+        protected override void Initialize()
+        {
+            _fsm.ChangeState<EnemyState_Idle>();
         }
 
         public override void Die()
@@ -19,11 +24,6 @@
         public override void Turn()
         {
             _fsm.EnemyTurn();
-        }
-
-        protected override void Initialize()
-        {
-            _fsm.ChangeState<EnemyState_Patrol>();
         }
     }
 }

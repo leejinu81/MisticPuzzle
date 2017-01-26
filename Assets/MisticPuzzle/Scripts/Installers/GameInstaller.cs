@@ -13,7 +13,7 @@ namespace Lonely
         {
             Container.BindAllInterfacesAndSelf<MisticPuzzleInput>().To<MisticPuzzleInput>().AsSingle();
 
-            Container.BindAllInterfacesAndSelf<GameManager>().To<GameManager>().AsSingle();
+            Container.Bind<GameManager>().To<GameManager>().AsSingle().NonLazy();
 
             Container.BindAllInterfacesAndSelf<UIManager>().To<UIManager>().AsSingle();
 
@@ -23,7 +23,7 @@ namespace Lonely
             Container.BindCommand<GameCommands.Die>().To<UIManager>(x => x.Die).AsSingle();
 
             Container.BindFactory<GameObject, TargetPositionFactory>().FromPrefab(_settings.targetPointPrefab);
-        }
+        }        
 
         [Serializable]
         public class Settings

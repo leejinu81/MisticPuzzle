@@ -75,7 +75,7 @@ namespace Lonely
             _originDir = originDir;
             _targetPoint = targetFactory.Create();
 
-            SetDirection(dir);
+            SetDirection(_originDir);
 
             _originPos = _transform.position;
         }
