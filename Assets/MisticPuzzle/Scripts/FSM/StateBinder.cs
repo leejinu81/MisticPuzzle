@@ -1,4 +1,5 @@
 ﻿using ModestTree;
+using System;
 using System.Collections.Generic;
 using Zenject;
 
@@ -6,7 +7,7 @@ namespace Lonely
 {
     public interface IStateBinder
     {
-        IStateBinder Enter<TStateEnter>() where TStateEnter : IStateEnter;
+        IStateBinder Enter<TStateEnter>(params Type[] decoratedTypes) where TStateEnter : IStateEnter;
 
         IStateBinder Exit<TStateExit>() where TStateExit : IStateExit;
 
@@ -21,9 +22,14 @@ namespace Lonely
 
     public class StateBinder : IStateBinder
     {
-        public IStateBinder Enter<TStateEnter>() where TStateEnter : IStateEnter
+        public IStateBinder Enter<TStateEnter>(params Type[] decoratedTypes) where TStateEnter : IStateEnter
         {
-            _enter = _container.Instantiate<TStateEnter>();
+            List<object> paramObjList = new List<object>();
+            foreach(var decoratedType in decoratedTypes)
+            {
+                paramObjList.Add(_container.Instantiate(decoratedType));
+            }
+            _enter = _container.Instantiate<TStateEnter>(paramObjList);
             return this;
         }
 

@@ -21,6 +21,7 @@ namespace Lonely
 
         //public eDirection dir { get { return _dir; } }
         private Vector2 _dir, _movePosition;
+        private Collider2D _stepOnFloor;
 
         public Vector2 dir { get { return _dir; } }
 
@@ -54,6 +55,12 @@ namespace Lonely
         {
             get { return _go.activeInHierarchy; }
             set { _go.SetActive(value); }
+        }
+
+        public Collider2D stepOnFloor
+        {
+            get { return _stepOnFloor; }
+            set { _stepOnFloor = value; }
         }
 
         public PlayerModel(Transform transform, Collider2D collider2D, GameObject go)

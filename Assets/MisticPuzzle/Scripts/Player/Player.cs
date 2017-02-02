@@ -8,6 +8,7 @@ namespace Lonely
     public class Player : MonoBehaviour
     {
         private PlayerFSM _fsm;
+        private PlayerModel _model;
         private GameCommands.Escape _escapeCommand;
 
         private void Start()
@@ -16,9 +17,10 @@ namespace Lonely
         }
 
         [Inject]
-        public void Inject(PlayerFSM fsm, SceneContext sc, GameCommands.Escape escapeCommand)
+        public void Inject(PlayerFSM fsm, PlayerModel model, SceneContext sc, GameCommands.Escape escapeCommand)
         {
             _fsm = fsm;
+            _model = model;
             _escapeCommand = escapeCommand;
 
             var zb = GetComponent<ZenjectBinding>();
@@ -37,6 +39,10 @@ namespace Lonely
                 var nextSceneIdx = SceneManager.GetActiveScene().buildIndex + 1;
                 if (nextSceneIdx.IsLess(SceneManager.sceneCountInBuildSettings))
                     SceneManager.LoadScene(nextSceneIdx);
+            }
+            else if (collision.CompareTag("HalfBreakFloor"))
+            {                
+                _model.stepOnFloor = collision;
             }
         }
 
